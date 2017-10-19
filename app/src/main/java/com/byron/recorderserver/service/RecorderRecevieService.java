@@ -12,11 +12,8 @@ import com.byron.recorderserver.utils.IPUtil;
 import com.byron.recorderserver.utils.ThreadPoolUtil;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
  * Created by Jie.Chen on 2017/10/17.
@@ -83,6 +80,7 @@ public class RecorderRecevieService extends Service {
          */
         public void receiveAudio(ReceiveRecorderCallback callback) {
             if (mServerSocket != null && mServerSocket.isBound() && !mServerSocket.isClosed()) {
+                //ThreadPoolUtil.getInstance().receiveAudioTest(mServerSocket,callback);
                 ThreadPoolUtil.getInstance().receiveAudio(mServerSocket,callback);
             }
         }

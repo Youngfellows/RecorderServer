@@ -4,8 +4,11 @@ import android.util.Log;
 
 import com.byron.recorderserver.interfaces.ReceiveRecorderCallback;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -39,7 +42,7 @@ public class ThreadPoolUtil {
      * @param serverSocket
      * @param callback
      */
-    public void receiveAudio(final ServerSocket serverSocket, final ReceiveRecorderCallback callback) {
+    public void receiveAudioTest(final ServerSocket serverSocket, final ReceiveRecorderCallback callback) {
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -91,6 +94,51 @@ public class ThreadPoolUtil {
                                 socket.close();
                             } catch (IOException e) {
                                 //ignore the exception
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 接收服务端发送过来的音频数据
+     *
+     * @param serverSocket
+     * @param callback
+     */
+    public void receiveAudio(final ServerSocket serverSocket, final ReceiveRecorderCallback callback) {
+        mExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    Socket socket = null;
+                    try {
+                        socket = serverSocket.accept();
+                        Log.i(TAG, "New connection accepted " + socket.getRemoteSocketAddress());
+
+                        InputStream in = socket.getInputStream();//接收TCP相应
+                        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[1024];
+                        int len = -1;
+                        while ((len = in.read(buffer)) != -1) {
+                            bytesOut.write(buffer, 0, len);
+                        }
+                        Log.i(TAG, "收到服务器的应答=[" + bytesOut.toString("UTF-8") + "]");
+                        if (callback != null) {
+                            callback.receiveInfo(bytesOut.toString("UTF-8"));
+                        }
+                        in.close();
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (socket != null) {
+                            try {
+                                socket.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
                         }
                     }
